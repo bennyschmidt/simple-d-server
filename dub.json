@@ -1,6 +1,6 @@
 {
-	"name": "hello-world",
-	"description": "A minimal D application.",
+	"name": "simple-d-server",
+	"description": "A simple web server project exploring Vibe (dlang)",
 	"dependencies": {
 		"vibe-d": "~>0.10.0"
 	}
