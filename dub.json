@@ -1,0 +1,7 @@
+{
+	"name": "hello-world",
+	"description": "A minimal D application.",
+	"dependencies": {
+		"vibe-d": "~>0.10.0"
+	}
+}

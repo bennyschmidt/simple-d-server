@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist</title>
+    <style>
+      body { font-family: sans-serif; max-width: 500px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+      .book-item { margin: 10px 0; display: block; cursor: pointer; }
+      input[type="text"] { width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box; }
+      button { background: #007bff; color: white; padding: 10px 15px; border: none; cursor: pointer; border-radius: 4px; }
+      button:hover { background: #0056b3; }
+      #statusMessage { margin-top: 15px; font-weight: bold; }
+      .success { color: green; }
+      .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Wishlist</h1>
+    <form id="wishlistForm">
+      <label for="userName"><strong>Your Name:</strong></label>
+      <input type="text" id="userName" placeholder="Enter your name" required>
+      <p><strong>Add books to your wishlist:</strong></p>
+      <div id="booksContainer">Fetching books...</div>
+      <br>
+      <button type="submit">Submit</button>
+    </form>
+    <div id="statusMessage"></div>
+    <script>
+      const booksContainer = document.getElementById('booksContainer');
+      const wishlistForm = document.getElementById('wishlistForm');
+      const statusMessage = document.getElementById('statusMessage');
+
+      const onLoad = async () => {
+        try {
+          const response = await fetch('/books');
+
+          if (!response.ok) throw new Error('Failed to fetch books');
+
+          const data = await response.json();
+
+          if (!data?.books) {
+            alert('No data.');
+
+            return;
+          }
+
+          booksContainer.innerHTML = '';
+
+          for (const book of data.books) {
+            const label = document.createElement('label');
+
+            label.className = 'book-item';
+
+            const checkbox = document.createElement('input');
+
+            checkbox.type = 'checkbox';
+            checkbox.name = 'wishlistBooks';
+            checkbox.value = book.name;
+
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(` ${book.name} - by ${book.author}`));
+            booksContainer.appendChild(label);
+          }
+        } catch (err) {
+          booksContainer.innerHTML = `<span class="error">Error loading books: ${err.message}</span>`;
+        }
+      };
+
+      const onSubmit = async event => {
+        event.preventDefault();
+
+        statusMessage.textContent = 'Submitting...';
+        statusMessage.className = '';
+
+        const name = document.getElementById('userName').value;
+
+        const checkedBoxes = document.querySelectorAll('input[name="wishlistBooks"]:checked');
+        const wishlist = Array.from(checkedBoxes).map(cb => cb.value);
+        const payload = { name, wishlist };
+
+        try {
+          const response = await fetch('/user', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.success) {
+            statusMessage.textContent = result.message;
+            statusMessage.className = 'success';
+
+            wishlistForm.reset();
+          } else {
+            throw new Error(result.error || 'Unknown error.');
+          }
+        } catch (err) {
+          statusMessage.textContent = `Error: ${err.message}`;
+          statusMessage.className = 'error';
+        }
+      };
+
+      wishlistForm.addEventListener('submit', onSubmit);
+      onLoad();
+    </script>
+</body>
+</html>
